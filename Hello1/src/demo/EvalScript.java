@@ -9,6 +9,6 @@ public class EvalScript {
         // create a JavaScript engine
         ScriptEngine engine = factory.getEngineByName("JavaScript");
         // evaluate JavaScript code from String
-        engine.eval("print('Hello, World'); x=2");
+        engine.eval("print('Hello, World');");
     }
 }

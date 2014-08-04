@@ -37,15 +37,14 @@ public class Parser {
 					endofline = ((nbcr == 1) && (nblf == 1));
 					if (endofline) {
 						tokens.clear();
-						cursor = 0; nbcr = 0; nblf = 0; // isolated CR ou LF are avoided
+						cursor = 0; tokenindex = 0; nbcr = 0; nblf = 0; nbsp = 0;
 						isreadingcomment = false;
 					}
 				}
 			} else if (isreadingstring == true) {
 				if ((digit == '"') || (digit == ']')) { // then this is the end
-					token = new String(buffer, tokenindex, cursor - tokenindex);
-					tokens.add(token);
-					tokenindex = cursor;
+					tokens.add(new String(buffer, tokenindex, cursor - tokenindex));
+					cursor = 0; tokenindex = 0;
 					isreadingstring = false;
 				}
 			} else if ((digit == '"') || (digit == '[')) {
@@ -62,10 +61,9 @@ public class Parser {
 					cursor--;
 				} else {
 					if (cursor > tokenindex + 1) { // then string not empty!
-						token = new String(buffer, tokenindex, cursor - tokenindex - 1);
-						tokens.add(token);
+						tokens.add(new String(buffer, tokenindex, cursor - tokenindex - 1));
 					}
-					tokenindex = cursor;
+					cursor = 0; tokenindex = 0;
 				}
 			} else if ((digit == '\r') || (digit == '\n')) {
 				if (digit == '\r') { nbcr++; }	else { nblf++; }
@@ -73,13 +71,11 @@ public class Parser {
 				if (endofline) {
 					//System.out.println(cursor + "," + tokenindex);
 					if (cursor > tokenindex + 2) { // then string not empty!
-						token = new String(buffer, tokenindex, cursor - tokenindex - 2);
-						tokens.add(token);
+						tokens.add(new String(buffer, tokenindex, cursor - tokenindex - 2));
 					}
-					tokenindex = 0;
 					readLine(tokens);	
 					tokens.clear();
-					cursor = 0; nbcr = 0; nblf = 0; // isolated CR ou LF are avoided
+					cursor = 0; tokenindex = 0; nbcr = 0; nblf = 0; nbsp = 0; // isolated CR or LF are avoided
 					isreadingcomment = false;
 				}
 			} else {
@@ -87,8 +83,8 @@ public class Parser {
 				nbsp = 0;
 			}
 		} // while loop
-		token = new String(buffer, tokenindex, cursor - tokenindex);
-		if (token.isEmpty() == false) {
+		if (cursor - tokenindex > 0) {
+			token = new String(buffer, tokenindex, cursor - tokenindex);
 			tokens.add(token);
 		}
 		readLine(tokens);

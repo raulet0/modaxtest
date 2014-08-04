@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 public class Parser {
@@ -13,79 +16,82 @@ public class Parser {
 		// TODO Auto-generated constructor stub
 	}
 
-	private static void readLine(String[] tokens) {
-		
+	private static void readLine(List<String> tokens) {
+		if (tokens.isEmpty()) { System.out.print("EL:"); }
+		System.out.println(tokens);
 	}
 
 	private static void readRules(final InputStream is) throws IOException {
-		byte[] buf = new byte[1024];
-		boolean begin_quote = false;
-		boolean comment = false;
+		byte[] buffer = new byte[10];
+		boolean isreadingstring = false, isreadingcomment = false, endofline = false;
+		int cursor = 0, digit = 0, nbcr = 0, nblf = 0, nbsp = 0, tokenindex = 0;
 		String token = null;
-		int nbpar = 0;
-		int nread = 0, ch = 0, nbcr = 0, nblf = 0, index_nl = 0, pos = 0;
-		boolean end_of_line = false, end_of_head = false;
-		// to prevent buffer overflow, another strategy could be to continue to read
-		// the stream without writing anything (stop to increment nread ?)...
-		// read return -1 if end of stream (end of file).
-		// NOTE : if socket closed then read return -1 immediately.
-		while ((nread < buf.length) && ((ch = is.read()) >= 0)) { // scan headers
-			buf[nread] = (byte)ch;
-			nread++; // now, next position to be filled
-			switch(ch) {
-			case '\r': 
-				nbcr++;
-				break;
-			case '\n': 
-				nblf++;
-				break;
-			case ' ':
-				token = new String(buf, index_nl, nread - index_nl - 2);
-				break;
-			case '"':
-				begin_quote = !begin_quote;
-				break;
-			case '[':
-				nbpar++;
-				break;
-			case ']':
-				nbpar--;
-				break;
-			case '*':
-				comment = true; // in first position ???
-				break;
-			default:
-				break;
-			}
-			end_of_line = ((nbcr == 1) && (nblf == 1));
-			end_of_head = ((nbcr == 2) && (nblf == 2));
-			if (end_of_line == true) {
-			}
-			nbcr = 0; // isolated CR ou LF are avoided
-			nblf = 0;
-
-			/*
-			if ((ch == '\r') || (ch == '\n')) {
-				if (ch == '\r') {
-					nbcr++;
+		List<String> tokens = new ArrayList<String>();
+		while ((digit = is.read()) >= 0) {
+			if (cursor == buffer.length) { cursor--; } // prevent buffer overflow
+			buffer[cursor] = (byte)digit;
+			cursor++; // now, next position to be filled
+			if (isreadingcomment == true) {
+				if ((digit == '\r') || (digit == '\n')) {
+					if (digit == '\r') { nbcr++; } else { nblf++; }
+					endofline = ((nbcr == 1) && (nblf == 1));
+					if (endofline) {
+						tokens.clear();
+						cursor = 0; nbcr = 0; nblf = 0; // isolated CR ou LF are avoided
+						isreadingcomment = false;
+					}
 				}
-				else {
-					nblf++;
+			} else if (isreadingstring == true) {
+				if ((digit == '"') || (digit == ']')) { // then this is the end
+					token = new String(buffer, tokenindex, cursor - tokenindex);
+					tokens.add(token);
+					tokenindex = cursor;
+					isreadingstring = false;
 				}
-				end_of_line = ((nbcr == 1) && (nblf == 1));
-				end_of_head = ((nbcr == 2) && (nblf == 2));
-				if (end_of_line == true) {
-					lineread = new String(buf, index_nl, nread - index_nl - 2); // without CRLF
-					index_nl = nread; // beginning of a new line for a new field...
+			} else if ((digit == '"') || (digit == '[')) {
+				if (isreadingstring == false) { // then this is the beginning
+					tokenindex = cursor - 1;
 				}
-				else if (end_of_head == true) { break; } // here, nread - index_nl == 2
+				isreadingstring = true;
+			} else if ((digit == '*') && (cursor == 1)) {
+					isreadingcomment = true;
+					// System.out.println("comment");
+			} else if ((digit == ' ') || (digit == '\t')) {
+				nbsp++;
+				if ((cursor == 1) || (nbsp >= 2)) { // first spaces or double space
+					cursor--;
+				} else {
+					if (cursor > tokenindex + 1) { // then string not empty!
+						token = new String(buffer, tokenindex, cursor - tokenindex - 1);
+						tokens.add(token);
+					}
+					tokenindex = cursor;
+				}
+			} else if ((digit == '\r') || (digit == '\n')) {
+				if (digit == '\r') { nbcr++; }	else { nblf++; }
+				endofline = ((nbcr == 1) && (nblf == 1));
+				if (endofline) {
+					//System.out.println(cursor + "," + tokenindex);
+					if (cursor > tokenindex + 2) { // then string not empty!
+						token = new String(buffer, tokenindex, cursor - tokenindex - 2);
+						tokens.add(token);
+					}
+					tokenindex = 0;
+					readLine(tokens);	
+					tokens.clear();
+					cursor = 0; nbcr = 0; nblf = 0; // isolated CR ou LF are avoided
+					isreadingcomment = false;
+				}
+			} else {
+				// not reading comment, not reading string, not special digit
+				nbsp = 0;
 			}
-			else {
-				nbcr = 0; // isolated CR ou LF are avoided
-				nblf = 0;
-			}
-			 */
 		} // while loop
+		token = new String(buffer, tokenindex, cursor - tokenindex);
+		if (token.isEmpty() == false) {
+			tokens.add(token);
+		}
+		readLine(tokens);
 	}
 
 	
@@ -99,7 +105,8 @@ public class Parser {
 			readRules(is);
 			is.close();
 		} catch (Exception e) {
-			System.err.println("Error: " + e.getMessage());
+			// System.err.println("Error: " + e.getMessage());
+			e.printStackTrace();
 		}
 
 	}

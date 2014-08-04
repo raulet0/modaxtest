@@ -1,9 +1,21 @@
-* essai
+      "coucou *** tout le monde ***
+          et	bonjour"
+* essai de commentaire
+* sur plusieurs lignes
+*
 
-REGLE R1
-SI
-    p ?x      10
-ALORS
-  + q $x [ ?x + 1 ] "hello world" foo
+	 	 	 	 REGLE   R1        
+                **** coucou
 
-FIN
+  SI
+    p    ?x      10
+    [?x>(?x+2)]           
+  ALORS
+  +   q   ?x [?x+1] [100*3] "" "hello all the			world" foo 	gee   	bar
+
+
+  FIN
+  
+  			
+  * ok
+  

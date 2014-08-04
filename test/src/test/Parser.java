@@ -1,6 +1,7 @@
 package test;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,8 +91,11 @@ public class Parser {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		String dir = System.getProperty("user.dir") + File.separator;
+		System.out.println(dir);
 		try {
-			InputStream is = new BufferedInputStream(new FileInputStream("C:/User/workspace_java/Modax/bases/test.reg.txt"));
+			//InputStream is = new BufferedInputStream(new FileInputStream("C:/User/workspace_java/Modax/bases/test.reg.txt"));
+			InputStream is = new BufferedInputStream(new FileInputStream("test.reg.txt"));
 			readRules(is);
 			is.close();
 		} catch (Exception e) {

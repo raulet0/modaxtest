@@ -1,0 +1,9 @@
+* essai
+
+REGLE R1
+SI
+    p ?x      10
+ALORS
+  + q $x [ ?x + 1 ] "hello world" foo
+
+FIN

@@ -6,102 +6,119 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Vector;
 
 public class Parser {
 
 	public Parser() {
-		// TODO Auto-generated constructor stub
 	}
 
-	private static void readLine(List<String> tokens) {
-		if (tokens.isEmpty()) { System.out.print("EL:"); }
-		System.out.println(tokens);
+	private void readLine(List<String> tokens) {
+		if (! tokens.isEmpty()) { 
+			System.out.println(tokens);
+		}
 	}
 
-	private static void readRules(final InputStream is) throws IOException {
-		byte[] buffer = new byte[10];
-		boolean isreadingstring = false, isreadingcomment = false, endofline = false;
-		int cursor = 0, digit = 0, nbcr = 0, nblf = 0, nbsp = 0, tokenindex = 0;
-		String token = null;
+	private void trace(int digit, int cursor) {
+		System.out.print("cursor=" + cursor);
+		if ((digit != '\r') && (digit != '\n')) {
+			System.out.print("	" + (char)digit);
+		}
+		System.out.println();
+	}
+	
+	private void readRules(final InputStream is) throws IOException {
+		byte[] buffer = new byte[1024];
+		boolean isreadingstring = false, isreadingcomment = false, isreadingexpression = false,
+				pushcursor = false;
+		int digit = 0, cursor = 0, nbcr = 0, nblf = 0;
 		List<String> tokens = new ArrayList<String>();
 		while ((digit = is.read()) >= 0) {
-			if (cursor == buffer.length) { cursor--; } // prevent buffer overflow
+			this.trace(digit, cursor);
 			buffer[cursor] = (byte)digit;
-			cursor++; // now, next position to be filled
-			if (isreadingcomment == true) {
+			pushcursor = false;
+			if (isreadingcomment) { // from anywhere until end of line
 				if ((digit == '\r') || (digit == '\n')) {
 					if (digit == '\r') { nbcr++; } else { nblf++; }
-					endofline = ((nbcr == 1) && (nblf == 1));
-					if (endofline) {
+					if ((nbcr == 1) && (nblf == 1)) { // end of line
+						this.readLine(tokens);	
 						tokens.clear();
-						cursor = 0; tokenindex = 0; nbcr = 0; nblf = 0; nbsp = 0;
+						nbcr = 0; nblf = 0;
 						isreadingcomment = false;
 					}
 				}
-			} else if (isreadingstring == true) {
-				if ((digit == '"') || (digit == ']')) { // then this is the end
-					tokens.add(new String(buffer, tokenindex, cursor - tokenindex));
-					cursor = 0; tokenindex = 0;
+			} else if (isreadingstring) {
+				if (digit == '"') { // then this is the end of string
+					tokens.add(new String(buffer, 0, cursor + 1)); // " included
+					cursor = 0;
 					isreadingstring = false;
+				} else {
+					pushcursor = true;
 				}
-			} else if ((digit == '"') || (digit == '[')) {
-				if (isreadingstring == false) { // then this is the beginning
-					tokenindex = cursor - 1;
+			} else if (isreadingexpression) {
+				if (digit == ']') { // then this is the end of expression
+					tokens.add(new String(buffer, 0, cursor + 1)); // ] included
+					cursor = 0;
+					isreadingexpression = false;
+				} else {
+					pushcursor = true;
+				}
+			} else if (digit == '"') {
+				if ( ! isreadingstring) { // then this is the beginning of string
+					if (cursor > 0) { // first " is also a separator
+						tokens.add(new String(buffer, 0, cursor)); // " excluded
+					}
+					buffer[cursor = 0] = (byte)digit;
 				}
 				isreadingstring = true;
-			} else if ((digit == '*') && (cursor == 1)) {
-					isreadingcomment = true;
-					// System.out.println("comment");
-			} else if ((digit == ' ') || (digit == '\t')) {
-				nbsp++;
-				if ((cursor == 1) || (nbsp >= 2)) { // first spaces or double space
-					cursor--;
-				} else {
-					if (cursor > tokenindex + 1) { // then string not empty!
-						tokens.add(new String(buffer, tokenindex, cursor - tokenindex - 1));
+				pushcursor = true;
+			} else if (digit == '[') {
+				if ( ! isreadingexpression) { // then this is the beginning of expression
+					if (cursor > 0) { // first [ is also a separator
+						tokens.add(new String(buffer, 0, cursor)); // [ excluded
 					}
-					cursor = 0; tokenindex = 0;
+					buffer[cursor = 0] = (byte)digit;
+				}
+				isreadingexpression = true;
+				pushcursor = true;
+			} else if (((digit == '*') || (digit == '#')) && (cursor == 0)) {
+					isreadingcomment = true;
+			} else if ((digit == ' ') || (digit == '\t')) {
+				if (cursor > 0) { // no first spaces and no double space
+					tokens.add(new String(buffer, 0, cursor));
+					cursor = 0;
 				}
 			} else if ((digit == '\r') || (digit == '\n')) {
 				if (digit == '\r') { nbcr++; }	else { nblf++; }
-				endofline = ((nbcr == 1) && (nblf == 1));
-				if (endofline) {
-					//System.out.println(cursor + "," + tokenindex);
-					if (cursor > tokenindex + 2) { // then string not empty!
-						tokens.add(new String(buffer, tokenindex, cursor - tokenindex - 2));
+				if ((nbcr == 1) && (nblf == 1)) { // end of line
+					if (cursor > 0) { // then string not empty!
+						tokens.add(new String(buffer, 0, cursor));
 					}
-					readLine(tokens);	
+					this.readLine(tokens);	
 					tokens.clear();
-					cursor = 0; tokenindex = 0; nbcr = 0; nblf = 0; nbsp = 0; // isolated CR or LF are avoided
-					isreadingcomment = false;
+					cursor = 0; nbcr = 0; nblf = 0;
+					isreadingcomment = false; // CRLF always terminate comments (not strings)
 				}
 			} else {
 				// not reading comment, not reading string, not special digit
-				nbsp = 0;
+				pushcursor = true;
 			}
+			if (pushcursor && (cursor + 1 < buffer.length)) { cursor++; } // prevent buffer overflow
 		} // while loop
-		if (cursor - tokenindex > 0) {
-			token = new String(buffer, tokenindex, cursor - tokenindex);
-			tokens.add(token);
+		if (cursor > 0) {
+			tokens.add(new String(buffer, 0, cursor));
 		}
-		readLine(tokens);
+		this.readLine(tokens);
 	}
-
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		String dir = System.getProperty("user.dir") + File.separator;
-		System.out.println(dir);
+		Parser parser = new Parser();
+		System.out.println(System.getProperty("user.dir") + File.separator);
 		try {
-			//InputStream is = new BufferedInputStream(new FileInputStream("C:/User/workspace_java/Modax/bases/test.reg.txt"));
 			InputStream is = new BufferedInputStream(new FileInputStream("test.reg.txt"));
-			readRules(is);
+			parser.readRules(is);
 			is.close();
 		} catch (Exception e) {
-			// System.err.println("Error: " + e.getMessage());
 			e.printStackTrace();
 		}
 

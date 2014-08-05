@@ -1,21 +1,21 @@
-      "coucou *** tout le monde ***
-          et	bonjour"
-* essai de commentaire
-* sur plusieurs lignes
+*      "coucou *** tout le monde ***
+#          et	bonjour"
+* essai de "commentaire bizarre" sur plusieurs lignes
 *
+# commentaire
 
 	 	 	 	 REGLE   R1        
                 **** coucou
 
   SI
-    p    ?x      10
-    [?x>(?x+2)]           
+    p    ?x      	10 * commentaire
+    u    ?x			20
+    [?x>(?x +2)]           
   ALORS
-  +   q   ?x [?x+1] [100*3] "" "hello all the			world" foo 	gee   	bar
++  q  ?x[?x+1][100*3] "" "hi! *** hello ***
+			[all] the		world"  foo 	gee
++  r["A"+"B"]
 
 
   FIN
-  
-  			
-  * ok
-  
+              # ok

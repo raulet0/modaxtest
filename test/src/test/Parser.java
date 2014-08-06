@@ -14,9 +14,9 @@ public class Parser {
 	}
 
 	private void readLine(List<String> tokens) {
-		if (! tokens.isEmpty()) { 
+		//if (! tokens.isEmpty()) { 
 			System.out.println(tokens);
-		}
+		//}
 	}
 
 	private void trace(int digit, int cursor) {
@@ -34,14 +34,16 @@ public class Parser {
 		int digit = 0, cursor = 0, nbcr = 0, nblf = 0;
 		List<String> tokens = new ArrayList<String>();
 		while ((digit = is.read()) >= 0) {
-			this.trace(digit, cursor);
+			// this.trace(digit, cursor);
 			buffer[cursor] = (byte)digit;
 			pushcursor = false;
 			if (isreadingcomment) { // from anywhere until end of line
 				if ((digit == '\r') || (digit == '\n')) {
 					if (digit == '\r') { nbcr++; } else { nblf++; }
 					if ((nbcr == 1) && (nblf == 1)) { // end of line
-						this.readLine(tokens);	
+						if (! tokens.isEmpty()) { 
+							this.readLine(tokens);
+						}
 						tokens.clear();
 						nbcr = 0; nblf = 0;
 						isreadingcomment = false;
@@ -94,7 +96,9 @@ public class Parser {
 					if (cursor > 0) { // then string not empty!
 						tokens.add(new String(buffer, 0, cursor));
 					}
-					this.readLine(tokens);	
+					if (! tokens.isEmpty()) { 
+						this.readLine(tokens);
+					}
 					tokens.clear();
 					cursor = 0; nbcr = 0; nblf = 0;
 					isreadingcomment = false; // CRLF always terminate comments (not strings)
@@ -108,7 +112,9 @@ public class Parser {
 		if (cursor > 0) {
 			tokens.add(new String(buffer, 0, cursor));
 		}
-		this.readLine(tokens);
+		if (! tokens.isEmpty()) { 
+			this.readLine(tokens);
+		}
 	}
 	
 	public static void main(String[] args) {

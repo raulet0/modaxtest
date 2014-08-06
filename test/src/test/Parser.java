@@ -10,6 +10,8 @@ import java.util.List;
 
 public class Parser {
 
+	static final String filename = "test.reg.txt";
+	
 	public Parser() {
 	}
 
@@ -121,7 +123,7 @@ public class Parser {
 		Parser parser = new Parser();
 		System.out.println(System.getProperty("user.dir") + File.separator);
 		try {
-			InputStream is = new BufferedInputStream(new FileInputStream("test.reg.txt"));
+			InputStream is = new BufferedInputStream(new FileInputStream(filename));
 			parser.readRules(is);
 			is.close();
 		} catch (Exception e) {

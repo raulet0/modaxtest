@@ -6,37 +6,38 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Parser {
-
-	static final String filename = "test.reg.txt";
 	
+	static String filename = "test.reg.txt";
+
 	public Parser() {
 	}
 
-	private void readLine(List<String> tokens) {
-		//if (! tokens.isEmpty()) { 
-			System.out.println(tokens);
-		//}
-	}
-
-	private void trace(int digit, int cursor) {
-		System.out.print("cursor=" + cursor);
-		if ((digit != '\r') && (digit != '\n')) {
-			System.out.print("	" + (char)digit);
-		}
-		System.out.println();
+	private void printLines(List<String[]> lines) {
+		for (String[] line : lines)
+			System.out.println(Arrays.deepToString(line));
 	}
 	
-	private void readRules(final InputStream is) throws IOException {
+	private static void readLinesTrace(int digit, int cursor) {
+		if ((digit != '\r') && (digit != '\n')) {
+			System.out.println("cursor=" + cursor + "\t" + (char)digit);
+		} else {
+			System.out.println("cursor=" + cursor);
+		}
+	}
+	
+	public static List<String[]> readLines(final InputStream is) throws IOException {
 		byte[] buffer = new byte[1024];
 		boolean isreadingstring = false, isreadingcomment = false, isreadingexpression = false,
 				pushcursor = false;
 		int digit = 0, cursor = 0, nbcr = 0, nblf = 0;
-		List<String> tokens = new ArrayList<String>();
+		List<String> tokens = new ArrayList<>();
+		List<String[]> lines = new ArrayList<>();
 		while ((digit = is.read()) >= 0) {
-			// this.trace(digit, cursor);
+			// readLinesTrace(digit, cursor);
 			buffer[cursor] = (byte)digit;
 			pushcursor = false;
 			if (isreadingcomment) { // from anywhere until end of line
@@ -44,7 +45,7 @@ public class Parser {
 					if (digit == '\r') { nbcr++; } else { nblf++; }
 					if ((nbcr == 1) && (nblf == 1)) { // end of line
 						if (! tokens.isEmpty()) { 
-							this.readLine(tokens);
+							lines.add(tokens.toArray(new String[0]));
 						}
 						tokens.clear();
 						nbcr = 0; nblf = 0;
@@ -99,32 +100,32 @@ public class Parser {
 						tokens.add(new String(buffer, 0, cursor));
 					}
 					if (! tokens.isEmpty()) { 
-						this.readLine(tokens);
+						lines.add(tokens.toArray(new String[0]));
 					}
 					tokens.clear();
 					cursor = 0; nbcr = 0; nblf = 0;
 					isreadingcomment = false; // CRLF always terminate comments (not strings)
 				}
-			} else {
-				// not reading comment, not reading string, not special digit
+			} else { // not reading comment, not reading string, not special digit
 				pushcursor = true;
 			}
 			if (pushcursor && (cursor + 1 < buffer.length)) { cursor++; } // prevent buffer overflow
 		} // while loop
-		if (cursor > 0) {
+		if (cursor > 0) { 
 			tokens.add(new String(buffer, 0, cursor));
 		}
-		if (! tokens.isEmpty()) { 
-			this.readLine(tokens);
+		if (! tokens.isEmpty()) {
+			lines.add(tokens.toArray(new String[0]));
 		}
+		return lines;
 	}
 	
 	public static void main(String[] args) {
+		System.out.println(System.getProperty("user.dir") + File.separator + filename);
 		Parser parser = new Parser();
-		System.out.println(System.getProperty("user.dir") + File.separator);
 		try {
 			InputStream is = new BufferedInputStream(new FileInputStream(filename));
-			parser.readRules(is);
+			parser.printLines(readLines(is));
 			is.close();
 		} catch (Exception e) {
 			e.printStackTrace();

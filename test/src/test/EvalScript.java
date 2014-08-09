@@ -26,12 +26,10 @@ public class EvalScript {
 			engine.put("y", 11);
 			System.out.println((boolean)engine.eval("x==y"));
 			buffer = new StringBuilder();
-
-			// http://stackoverflow.com/questions/3180188/import-a-class-in-scripting-java-javax-script
 			buffer.append("importClass(Packages.test.EvalScript);");
-			buffer.append("EvalScript.triple(10)");
-			engine.eval(buffer.toString());
-			
+			buffer.append("EvalScript.triple(10);");
+			String action = String.valueOf(engine.eval(buffer.toString()));
+			System.out.println(action + 1);
 		
 		} catch (ScriptException e) {
 			System.err.println("Error: " + e.getMessage());

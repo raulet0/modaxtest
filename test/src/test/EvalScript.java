@@ -35,7 +35,7 @@ public class EvalScript {
 		return false;
 	}
 	
-	public boolean evaluate2(String formula, Map<String, String> boundset) throws Exception {
+	public boolean evaluateBoolean(String formula, Map<String, String> boundset) throws Exception {
 		String formula1 = formula.replace('?', '_');
 		System.out.println(formula1);
 		for (String key : boundset.keySet()) {
@@ -44,6 +44,17 @@ public class EvalScript {
 			engine.put(key1, boundset.get(key));
 		}
 		return (boolean)engine.eval(formula1);
+	}
+
+	public String evaluateString(String formula, Map<String, String> boundset) throws Exception {
+		String formula1 = formula.replace('?', '_');
+		System.out.println(formula1);
+		for (String key : boundset.keySet()) {
+			System.out.println("key: " + key + " value: " + boundset.get(key));
+			String key1 = key.replace('?', '_');
+			engine.put(key1, boundset.get(key));
+		}
+		return String.valueOf(engine.eval(formula1));
 	}
 
 	public static int triple(int n) { return 3 * n; }
@@ -66,12 +77,17 @@ public class EvalScript {
 	    boundset1.clear();
 	    boundset1.put("?x", "2000");
 	    boundset1.put("?y", "1000");
-	    System.out.println(evalscript.evaluate2("?x==?y*2", boundset1));
+	    System.out.println(evalscript.evaluateBoolean("?x==?y*2", boundset1));
 
 	    boundset1.clear();
 	    boundset1.put("?x", "2001");
 	    boundset1.put("?y", "1000");
-	    System.out.println(evalscript.evaluate2("?x==?y*2", boundset1));
+	    System.out.println(evalscript.evaluateBoolean("?x==?y*2", boundset1));
+
+	    boundset1.clear();
+	    boundset1.put("?x", "2000");
+	    boundset1.put("?y", "1000");
+	    System.out.println(evalscript.evaluateString("?x+?y*2", boundset1));
 
 	    // engine.eval("importPackage(javax.swing);var op=JOptionPane.showMessageDialog(null, 'Hello!');");
 

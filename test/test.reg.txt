@@ -2,7 +2,7 @@
 #          et	bonjour"
 * essai de "commentaire bizarre" sur plusieurs lignes
 *
-# commentaire
+# commentaire 
 
 	 	 	 	 REGLE   R1        
                 **** coucou

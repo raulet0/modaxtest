@@ -2,7 +2,7 @@ package test;
 
 import java.io.*;
 import java.util.Arrays;
-class FileRead 
+class FileRead
 {
 	public static void main(String args[])
 	{

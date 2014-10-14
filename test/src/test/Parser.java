@@ -25,7 +25,7 @@ public class Parser {
 		if ((digit != '\r') && (digit != '\n')) {
 			System.out.println("cursor=" + cursor + "\t" + (char)digit);
 		} else {
-			System.out.println("cursor=" + cursor);
+			System.out.println("cursor=" + cursor); 
 		}
 	}
 	
